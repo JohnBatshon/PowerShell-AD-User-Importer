@@ -1,35 +1,40 @@
-param (
-    [string]$UserListFilePath = "UserList.txt",
-    [string]$Domain = "contoso",
-    [string]$FullDomain = "contoso.com"
-)
+# Path to CSV File
+$ADUsers = Import-csv C:\Temp\NewUsers.CSV
 
-# Load Active Directory module
-Import-Module ActiveDirectory
+for each ($user in  $ADUsers)
+{
 
-# Read usernames from the text file
-$userNames = Get-Content $UserListFilePath
+        $Username = $User.username
+        $Password = $User.password
+        $Firstname = $User.firstname
+        $Lastname = $User.lastname
+        $Department = $User.department
+        $OU = $User.ou
 
-foreach ($userName in $userNames) {
-    # Check if the user exists in Active Directory
-    $user = Get-ADUser $userName -Server $FullDomain -ErrorAction SilentlyContinue
-
-    if ($user -eq $null) {
-        Write-Host "User '$userName' not found in Active Directory. Creating user..."
-        
-        # Create the user
-        $password = ConvertTo-SecureString "DefaultPassword123" -AsPlainText -Force
-        $userParams = @{
-            Name = $userName
-            SamAccountName = $userName
-            UserPrincipalName = "$userName@$FullDomain"
-            AccountPassword = $password
-            Enabled = $true
-            Path = "OU=Users,DC=$Domain,DC=com"
+        # Check to see if user account exists in Active Directory
+        if (Get-ADUser -F {SamAccountName -eq $Username})
+        {
+                # If user does exist then output a warning message
+                Write-Warning "A user account named $Username already exists within Active Directory"
         }
-        New-ADUser @userParams
-    }
-    else {
-        Write-Host "User '$userName' already exists in Active Directory."
-    }
+        else 
+        {
+                # If the user does not exist then create a new user account
+                
+        # Account will be created in the OU listed in the $OU variable in the CSV file.
+        # Ensure you change the domain name in the "-UserPrincipalName" variable
+                New-ADUser `
+                -SamAccountName $Username `
+                -UserPrincipalName "$username@company.com" `
+                -Name "$Firstname $Lastname" `
+                -GivenName $Firstname `
+                -Surname $Lastname `
+                -Enabled $true `
+                -ChangePasswordAtLogin $true `
+                -DisplayName "$Lastname, $Firstname" `
+                -Department $Department `
+                -Path $OU `
+                -AccountPassword (convertto-securestring $Password -AsPlainText -Force)
+                
+        }
 }
