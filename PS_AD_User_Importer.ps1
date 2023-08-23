@@ -1,8 +1,8 @@
 # Specify the path to the text file containing usernames (one username per line)
 $userListFilePath = "C:\Path\To\usernames.txt"
-
+$domain = "YourDomain"
 # Get the Active Directory "Users" group object
-$group = Get-ADGroup "Users" -Server "YourDomain"
+$group = Get-ADGroup "Users" -Server $domain
 
 if ($group -eq $null) {
     Write-Host "Group 'Users' not found in Active Directory."
@@ -15,7 +15,7 @@ $usernames = Get-Content $userListFilePath
 # Loop through each username and add them to the group
 foreach ($username in $usernames) {
     # Check if the user exists
-    $user = Get-ADUser $username -ErrorAction SilentlyContinue -Server "YourDomain"
+    $user = Get-ADUser $username -ErrorAction SilentlyContinue -Server $domain
 
     if ($user -eq $null) {
         Write-Host "User '$username' not found in Active Directory."
