@@ -25,7 +25,7 @@ for each ($user in  $ADUsers)
         # Ensure you change the domain name in the "-UserPrincipalName" variable
                 New-ADUser `
                 -SamAccountName $Username `
-                -UserPrincipalName "$username@company.com" `
+                -UserPrincipalName "$username@SecureCo.com" `
                 -Name "$Firstname $Lastname" `
                 -GivenName $Firstname `
                 -Surname $Lastname `
