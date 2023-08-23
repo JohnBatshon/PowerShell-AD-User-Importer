@@ -12,7 +12,7 @@ New-ADOrganizationalUnit -Name _Users_ -ProtectedFromAccidentalDeletion $false
 foreach ($name in $user_list) {
     $first = $name.Split(" ")[0].ToLower()
     $last = $name.Split(" ")[1].ToLower()
-    $username = "$(first.Substring(0,1))$last)".ToLower()
+    $username = "$(first.Substring(0,1))$last").ToLower()
     Write-Host "Creating user: ($username)" -BackgroundColor Black -ForegroundColor Yellow
 
     New-AdUser -AccountPassword $password `
