@@ -27,7 +27,7 @@ foreach ($user in  $ADUsers) {
         -GivenName $Firstname `
         -Surname $Lastname `
         -Enabled $true `
-        -ChangePasswordAtLogin $true `
+        -ChangePasswordAtLogon $true `
         -DisplayName "$Lastname, $Firstname" `
         -Department $Department `
         -Path $OU `
