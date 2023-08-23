@@ -1,51 +1,50 @@
-# Specify the path to the text file containing usernames (one username per line)
-$userListFilePath = "C:\Path\To\usernames.txt"
-$domain = Contoso
-$domain_root = com
-$AD_user_group = Users
+# Please ensure you have the Active Directory module loaded by running Import-Module ActiveDirectory before executing the script.
+# Replace "YourGroupName" with the actual name of the Active Directory group you want to add users to. 
+# Replace "C:\Path\To\UserList.txt" with the path to the text file containing the list of user names.
+# Specify the Active Directory group name
+$groupName = "YourGroupName"
 
-# Get the Active Directory "Users" group object
-$group = Get-ADGroup $AD_user_group -Server $domain
+# Specify the path to the text file containing user names (one username per line)
+# Example UserList.txt
+# user1
+# user2
+# john.doe
+# jane.smith
+$userListFilePath = "C:\Path\To\UserList.txt"
 
+# Get the Active Directory group object
+$group = Get-ADGroup $groupName
 
 if ($group -eq $null) {
-    Write-Host "Group 'Users' not found in Active Directory."
+    Write-Host "Group '$groupName' not found in Active Directory."
     exit
 }
 
-# Read usernames from the text file
-$usernames = Get-Content $userListFilePath
+# Read user names from the text file
+$userNames = Get-Content $userListFilePath
 
-foreach ($username in $usernames) {
-    # Check if the user exists in Active Directory
-    $user = Get-ADUser $username -ErrorAction SilentlyContinue -Server $domain
+# Loop through each user name and add them to the group
+foreach ($userName in $userNames) {
+    # Check if the user exists
+    $user = Get-ADUser $userName -ErrorAction SilentlyContinue
 
     if ($user -eq $null) {
-        Write-Host "User '$username' not found in Active Directory. Adding user..."
+        Write-Host "User '$userName' not found in Active Directory. Creating user..."
+        
+        # Create the user
+        $password = ConvertTo-SecureString "DefaultPassword123" -AsPlainText -Force
+        New-ADUser -Name $userName -SamAccountName $userName -AccountPassword $password -Enabled $true -Path "OU=Users,DC=YourDomain,DC=com"
 
-        # Add the user to Active Directory
-        $password = ConvertTo-SecureString "Password123!" -AsPlainText -Force
-        $userParams = @{
-            SamAccountName = $username
-            Name = $username
-            GivenName = $username
-            Surname = "User"
-            DisplayName = $username
-            UserPrincipalName = "$username@$domain.$domain_root"
-            Path = "OU=$AD_user_group,DC=$domain,DC=$domain_root"
-            AccountPassword = $password
-            Enabled = $true
-        }
-        New-ADUser @userParams
-
-        # Add the user to the "Users" group
-        Add-ADGroupMember -Identity $group -Members $username
-        if ($?) {
-            Write-Host "User '$username' added to 'Users' group."
-        } else {
-            Write-Host "Failed to add user '$username' to 'Users' group."
-        }
+        # Fetch the newly created user
+        $user = Get-ADUser $userName
+    }
+    
+    # Add the user to the group
+    Add-ADGroupMember -Identity $group -Members $user -ErrorAction SilentlyContinue
+    
+    if ($?) {
+        Write-Host "User '$userName' added to group '$groupName'."
     } else {
-        Write-Host "User '$username' already exists in Active Directory."
+        Write-Host "Failed to add user '$userName' to group '$groupName'."
     }
 }
